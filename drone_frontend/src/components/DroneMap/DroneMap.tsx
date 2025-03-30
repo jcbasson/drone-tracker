@@ -4,8 +4,9 @@ import DroneMarker from './DroneMarker'
 import type { Coordinate } from '../../types/map.types'
 
 const DroneMap = () => {
+	const droneCoordSocketUrl = import.meta.env.VITE_DRONE_COORD_SOCKET_URL
 	useEffect(() => {
-		const websocket = new WebSocket('ws://localhost:8081/')
+		const websocket = new WebSocket(droneCoordSocketUrl)
 
 		websocket.onopen = () => {
 			console.log('Web Socket connected.')
@@ -15,7 +16,7 @@ const DroneMap = () => {
 			const data = JSON.parse(event.data) as Coordinate
 			console.log(data)
 		}
-	}, [])
+	}, [droneCoordSocketUrl])
 
 	return (
 		<Map>
