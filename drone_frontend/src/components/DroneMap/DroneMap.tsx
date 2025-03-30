@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import Map from '../Map'
 import DroneMarker from './DroneMarker'
@@ -17,19 +18,36 @@ const DroneMap = () => {
 		}
 	)
 
-	if (
-		readyState === ReadyState.CONNECTING ||
-		!coord?.latitude ||
-		!coord?.longitude
-	) {
+	const [debouncedCoord, setDebouncedCoord] = useState(coord)
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			if (coord?.latitude && coord?.longitude) {
+				setDebouncedCoord(coord)
+			}
+		}, 0)
+
+		return () => clearTimeout(timer)
+	}, [coord])
+
+	if (readyState === ReadyState.CONNECTING) {
 		// TODO: Implement spinner
 		return <></>
 	}
 
+	if (!debouncedCoord) {
+		return <></>
+	}
+
 	return (
-		<Map centerLatitude={coord.latitude} centerLongitude={coord.longitude}>
-			{/* <DroneMarker latitude={-33.946765} longitude={151.1796423} /> */}
-			<DroneMarker latitude={coord.latitude} longitude={coord.longitude} />
+		<Map
+			centerLatitude={debouncedCoord.latitude}
+			centerLongitude={debouncedCoord.longitude}
+		>
+			<DroneMarker
+				latitude={debouncedCoord.latitude}
+				longitude={debouncedCoord.longitude}
+			/>
 		</Map>
 	)
 }
