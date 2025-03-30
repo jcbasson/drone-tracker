@@ -18,7 +18,7 @@ const DroneMarkerIcon = () => {
 				<g
 					id='Artboard'
 					transform='translate(0, 0)'
-					fill='#000000'
+					fill='#FF0000'
 					fillRule='nonzero'
 				>
 					<g id='marker' transform='translate(0, -0)'>

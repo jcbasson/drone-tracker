@@ -3,9 +3,11 @@ import useWebSocket, { ReadyState } from 'react-use-websocket'
 import Map from '../Map'
 import DroneMarker from './DroneMarker'
 import type { Coordinate } from '../../types/map.types'
+import { Polyline } from 'react-leaflet'
 
 const DroneMap = () => {
 	const droneCoordSocketUrl = import.meta.env.VITE_DRONE_COORD_SOCKET_URL
+	const [pathPositions, setPathPositions] = useState<[number, number][]>([])
 
 	const {
 		lastJsonMessage: coord,
@@ -30,6 +32,21 @@ const DroneMap = () => {
 		return () => clearTimeout(timer)
 	}, [coord])
 
+	useEffect(() => {
+		if (coord?.latitude && coord?.longitude) {
+			setPathPositions((prev: [number, number][]) => {
+				const newPosition: [number, number] = [coord.latitude, coord.longitude]
+				const newPositions: [number, number][] = [...prev, newPosition]
+
+				// Limit path length to prevent performance issues (optional)
+				if (newPositions.length > 100) {
+					return newPositions.slice(-100)
+				}
+				return newPositions
+			})
+		}
+	}, [coord])
+
 	if (readyState === ReadyState.CONNECTING) {
 		// TODO: Implement spinner
 		return <></>
@@ -44,10 +61,23 @@ const DroneMap = () => {
 			centerLatitude={debouncedCoord.latitude}
 			centerLongitude={debouncedCoord.longitude}
 		>
-			<DroneMarker
-				latitude={debouncedCoord.latitude}
-				longitude={debouncedCoord.longitude}
-			/>
+			<>
+				<DroneMarker
+					latitude={debouncedCoord.latitude}
+					longitude={debouncedCoord.longitude}
+				/>
+				<Polyline
+					positions={pathPositions}
+					pathOptions={{
+						color: 'red',
+						weight: 3,
+						opacity: 0.8,
+						dashArray: '8, 12',
+						lineCap: 'round',
+						lineJoin: 'round',
+					}}
+				/>
+			</>
 		</Map>
 	)
 }
