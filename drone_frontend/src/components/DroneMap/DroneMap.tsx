@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
-import Map from '../Map'
+import { Map, MapController } from '../Map'
 import DroneMarker from './DroneMarker'
 import type { Coordinate } from '../../types/map.types'
 import { Polyline } from 'react-leaflet'
@@ -61,23 +61,22 @@ const DroneMap = () => {
 			centerLatitude={debouncedCoord.latitude}
 			centerLongitude={debouncedCoord.longitude}
 		>
-			<>
-				<DroneMarker
-					latitude={debouncedCoord.latitude}
-					longitude={debouncedCoord.longitude}
-				/>
-				<Polyline
-					positions={pathPositions}
-					pathOptions={{
-						color: 'red',
-						weight: 3,
-						opacity: 0.8,
-						dashArray: '8, 12',
-						lineCap: 'round',
-						lineJoin: 'round',
-					}}
-				/>
-			</>
+			<DroneMarker
+				latitude={debouncedCoord.latitude}
+				longitude={debouncedCoord.longitude}
+			/>
+			<Polyline
+				positions={pathPositions}
+				pathOptions={{
+					color: 'red',
+					weight: 3,
+					opacity: 0.8,
+					dashArray: '8, 12',
+					lineCap: 'round',
+					lineJoin: 'round',
+				}}
+			/>
+			<MapController coord={coord} />
 		</Map>
 	)
 }

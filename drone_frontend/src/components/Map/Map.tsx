@@ -9,7 +9,7 @@ const mapStyles = {
 interface MapProps {
 	centerLatitude: number
 	centerLongitude: number
-	children: JSX.Element
+	children: React.ReactNode
 }
 const Map = ({ centerLatitude, centerLongitude, children }: MapProps) => {
 	return (
