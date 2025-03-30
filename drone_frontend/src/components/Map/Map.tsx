@@ -7,12 +7,14 @@ const mapStyles = {
 }
 
 interface MapProps {
+	centerLatitude: number
+	centerLongitude: number
 	children: JSX.Element
 }
-const Map = ({ children }: MapProps) => {
+const Map = ({ centerLatitude, centerLongitude, children }: MapProps) => {
 	return (
 		<MapContainer
-			center={[-33.946765, 151.1796423]}
+			center={[centerLatitude, centerLongitude]}
 			zoom={14}
 			scrollWheelZoom={false}
 			style={mapStyles}
