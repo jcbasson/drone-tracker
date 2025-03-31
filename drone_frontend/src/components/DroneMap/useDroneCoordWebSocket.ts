@@ -1,12 +1,11 @@
-// import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import useWebSocket from 'react-use-websocket'
 import type { ReadyState } from 'react-use-websocket'
 import type { Coordinate } from '../../types/map.types'
 
 export const useDroneCoordWebSocket = () => {
 	const droneCoordSocketUrl = import.meta.env.VITE_DRONE_COORD_SOCKET_URL
-	// const [pathCoords, setPathCoords] = useState<[number, number][]>([])
-	// const [currentCoord, setCurrentCoord] = useState<Coordinate | null>(null)
+	const pathCoordsRef = useRef<[number, number][]>([])
 
 	const {
 		lastJsonMessage: currentCoord,
@@ -19,19 +18,22 @@ export const useDroneCoordWebSocket = () => {
 		}
 	)
 
-	// useEffect(() => {
-	// 	if (coord?.latitude && coord?.longitude) {
-	// 		setCurrentCoord(coord)
+	useEffect(() => {
+		if (currentCoord?.latitude && currentCoord?.longitude) {
+			const newPathCoord: [number, number] = [
+				currentCoord.latitude,
+				currentCoord.longitude,
+			]
 
-	// 		setPathCoords((prev) => {
-	// 			const newPathCoord: [number, number] = [coord.latitude, coord.longitude]
-	// 			const updatedPathCoords = [...prev, newPathCoord]
-	// 			return updatedPathCoords.length > 100
-	// 				? updatedPathCoords.slice(-100)
-	// 				: updatedPathCoords
-	// 		})
-	// 	}
-	// }, [coord])
+			// Update the ref without triggering re-renders
+			const updatedPathCoords = [...pathCoordsRef.current, newPathCoord]
 
-	return { readyState, currentCoord }
+			pathCoordsRef.current =
+				updatedPathCoords.length > 100
+					? updatedPathCoords.slice(-100)
+					: updatedPathCoords
+		}
+	}, [currentCoord])
+
+	return { readyState, currentCoord, pathCoords: pathCoordsRef.current }
 }

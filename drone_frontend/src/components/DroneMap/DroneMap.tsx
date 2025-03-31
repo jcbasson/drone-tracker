@@ -3,9 +3,10 @@ import 'leaflet/dist/leaflet.css'
 import DroneMarker from './DroneMarker'
 import { useDroneCoordWebSocket } from './useDroneCoordWebSocket'
 import { ReadyState } from 'react-use-websocket'
+import DroneTracer from './DroneTracer'
 
 const DroneMap = () => {
-	const { readyState, currentCoord } = useDroneCoordWebSocket()
+	const { readyState, currentCoord, pathCoords } = useDroneCoordWebSocket()
 
 	if (readyState === ReadyState.CONNECTING || !currentCoord) {
 		return <div>Loading map...</div>
@@ -22,6 +23,7 @@ const DroneMap = () => {
 				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 			/>
 			<DroneMarker currentCoord={currentCoord} />
+			<DroneTracer pathCoords={pathCoords} />
 		</MapContainer>
 	)
 }

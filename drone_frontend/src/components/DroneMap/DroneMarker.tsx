@@ -12,38 +12,36 @@ const DroneMarker = ({ currentCoord }: DroneMarkerProps) => {
 	const map = useMap()
 	const markerRef = useRef<L.Marker | null>(null)
 	const iconUrlRef = useRef<string | null>(null)
+	const initializedRef = useRef<boolean>(false)
+	const initialCoord = useRef<Coordinate>(currentCoord)
 
-	// Initialize marker with custom icon
+	// Initialize marker and icon - runs only once when map is ready
 	useEffect(() => {
-		if (!currentCoord) return
-
 		// Create the icon only once
-		if (!iconUrlRef.current) {
+		if (!initializedRef.current) {
+			const initCoord = initialCoord.current
+
 			const svgString = droneMarkerIconSVG()
 			const svgBlob = new Blob([svgString], { type: 'image/svg+xml' })
 			iconUrlRef.current = URL.createObjectURL(svgBlob)
-		}
 
-		// Create custom icon
-		const icon = L.icon({
-			iconUrl: iconUrlRef.current,
-			iconSize: [32, 32],
-			iconAnchor: [16, 16],
-			popupAnchor: [0, -16], // Add this for better popup positioning
-		})
+			const icon = L.icon({
+				iconUrl: iconUrlRef.current,
+				iconSize: [32, 32],
+				iconAnchor: [16, 16],
+				popupAnchor: [0, -16],
+			})
 
-		// Create the marker if it doesn't exist
-		if (!markerRef.current) {
-			markerRef.current = L.marker(
-				[currentCoord.latitude, currentCoord.longitude],
-				{ icon }
-			).addTo(map)
-		} else {
-			// Update existing marker position
-			markerRef.current.setLatLng([
-				currentCoord.latitude,
-				currentCoord.longitude,
-			])
+			// Wait for initial coordinates before creating the marker
+			if (initCoord) {
+				markerRef.current = L.marker(
+					[initCoord.latitude, initCoord.longitude],
+					{ icon }
+				).addTo(map)
+
+				console.log('Marker created - this should happen only once')
+				initializedRef.current = true
+			}
 		}
 
 		// Clean up on unmount
@@ -56,8 +54,44 @@ const DroneMarker = ({ currentCoord }: DroneMarkerProps) => {
 				URL.revokeObjectURL(iconUrlRef.current)
 				iconUrlRef.current = null
 			}
+			initializedRef.current = false
+		}
+	}, [map]) // Only depends on map, not currentCoord
+
+	// Create marker when initial coordinates become available
+	useEffect(() => {
+		// Skip if already initialized or no coordinates available
+		if (initializedRef.current || !currentCoord || !map) return
+
+		// Create the marker now that we have coordinates
+		if (iconUrlRef.current) {
+			const icon = L.icon({
+				iconUrl: iconUrlRef.current,
+				iconSize: [32, 32],
+				iconAnchor: [16, 16],
+				popupAnchor: [0, -16],
+			})
+
+			markerRef.current = L.marker(
+				[currentCoord.latitude, currentCoord.longitude],
+				{ icon }
+			).addTo(map)
+
+			console.log('Marker created after coordinates became available')
+			initializedRef.current = true
 		}
 	}, [map, currentCoord])
+
+	// Update marker position when coordinates change
+	useEffect(() => {
+		if (markerRef.current && currentCoord) {
+			markerRef.current.setLatLng([
+				currentCoord.latitude,
+				currentCoord.longitude,
+			])
+			console.log('Marker position updated')
+		}
+	}, [currentCoord])
 
 	return null
 }
