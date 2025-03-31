@@ -1,73 +1,28 @@
-import { useEffect, useState } from 'react'
-import useWebSocket, { ReadyState } from 'react-use-websocket'
-import { Map, MapController } from '../Map'
+import { MapContainer, TileLayer } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
 import DroneMarker from './DroneMarker'
-import DroneTracer from './DroneTracer'
-import type { Coordinate } from '../../types/map.types'
+import { useDroneCoordWebSocket } from './useDroneCoordWebSocket'
+import { ReadyState } from 'react-use-websocket'
 
 const DroneMap = () => {
-	const droneCoordSocketUrl = import.meta.env.VITE_DRONE_COORD_SOCKET_URL
-	const [pathCoords, setPathCoords] = useState<[number, number][]>([])
+	const { readyState, currentCoord } = useDroneCoordWebSocket()
 
-	const {
-		lastJsonMessage: coord,
-		readyState,
-	}: { lastJsonMessage: Coordinate; readyState: ReadyState } = useWebSocket(
-		droneCoordSocketUrl,
-		{
-			onOpen: () => console.log('Drone Coordinate socket opened'),
-			shouldReconnect: () => true,
-		}
-	)
-
-	const [debouncedCoord, setDebouncedCoord] = useState(coord)
-
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (coord?.latitude && coord?.longitude) {
-				setDebouncedCoord(coord)
-			}
-		}, 0)
-
-		return () => clearTimeout(timer)
-	}, [coord])
-
-	useEffect(() => {
-		if (coord?.latitude && coord?.longitude) {
-			setPathCoords((prev: [number, number][]) => {
-				const newPathCoord: [number, number] = [coord.latitude, coord.longitude]
-				const updatedPathCoords: [number, number][] = [...prev, newPathCoord]
-
-				// Limit path length to prevent performance issues
-				if (updatedPathCoords.length > 100) {
-					return updatedPathCoords.slice(-100)
-				}
-				return updatedPathCoords
-			})
-		}
-	}, [coord])
-
-	if (readyState === ReadyState.CONNECTING) {
-		// TODO: Implement spinner
-		return <></>
-	}
-
-	if (!debouncedCoord) {
-		return <></>
+	if (readyState === ReadyState.CONNECTING || !currentCoord) {
+		return <div>Loading map...</div>
 	}
 
 	return (
-		<Map
-			centerLatitude={debouncedCoord.latitude}
-			centerLongitude={debouncedCoord.longitude}
+		<MapContainer
+			center={[currentCoord.latitude, currentCoord.longitude]}
+			zoom={14}
+			style={{ height: '100vh', width: '100%' }}
 		>
-			<DroneMarker
-				latitude={debouncedCoord.latitude}
-				longitude={debouncedCoord.longitude}
+			<TileLayer
+				url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+				attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 			/>
-			<DroneTracer pathCoordinates={pathCoords} />
-			<MapController coord={debouncedCoord} />
-		</Map>
+			<DroneMarker currentCoord={currentCoord} />
+		</MapContainer>
 	)
 }
 
