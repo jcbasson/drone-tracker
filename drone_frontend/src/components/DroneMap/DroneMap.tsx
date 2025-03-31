@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import { Map, MapController } from '../Map'
 import DroneMarker from './DroneMarker'
+import DroneTracer from './DroneTracer'
 import type { Coordinate } from '../../types/map.types'
-import { Polyline } from 'react-leaflet'
 
 const DroneMap = () => {
 	const droneCoordSocketUrl = import.meta.env.VITE_DRONE_COORD_SOCKET_URL
-	const [pathPositions, setPathPositions] = useState<[number, number][]>([])
+	const [pathCoords, setPathCoords] = useState<[number, number][]>([])
 
 	const {
 		lastJsonMessage: coord,
@@ -34,15 +34,15 @@ const DroneMap = () => {
 
 	useEffect(() => {
 		if (coord?.latitude && coord?.longitude) {
-			setPathPositions((prev: [number, number][]) => {
-				const newPosition: [number, number] = [coord.latitude, coord.longitude]
-				const newPositions: [number, number][] = [...prev, newPosition]
+			setPathCoords((prev: [number, number][]) => {
+				const newPathCoord: [number, number] = [coord.latitude, coord.longitude]
+				const updatedPathCoords: [number, number][] = [...prev, newPathCoord]
 
-				// Limit path length to prevent performance issues (optional)
-				if (newPositions.length > 100) {
-					return newPositions.slice(-100)
+				// Limit path length to prevent performance issues
+				if (updatedPathCoords.length > 100) {
+					return updatedPathCoords.slice(-100)
 				}
-				return newPositions
+				return updatedPathCoords
 			})
 		}
 	}, [coord])
@@ -65,18 +65,8 @@ const DroneMap = () => {
 				latitude={debouncedCoord.latitude}
 				longitude={debouncedCoord.longitude}
 			/>
-			<Polyline
-				positions={pathPositions}
-				pathOptions={{
-					color: 'red',
-					weight: 3,
-					opacity: 0.8,
-					dashArray: '8, 12',
-					lineCap: 'round',
-					lineJoin: 'round',
-				}}
-			/>
-			<MapController coord={coord} />
+			<DroneTracer pathCoordinates={pathCoords} />
+			<MapController coord={debouncedCoord} />
 		</Map>
 	)
 }
