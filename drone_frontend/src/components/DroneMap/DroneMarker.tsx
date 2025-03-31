@@ -89,9 +89,9 @@ const DroneMarker = ({ currentCoord }: DroneMarkerProps) => {
 				currentCoord.latitude,
 				currentCoord.longitude,
 			])
-			console.log('Marker position updated')
+			map.setView([currentCoord.latitude, currentCoord.longitude])
 		}
-	}, [currentCoord])
+	}, [currentCoord, map])
 
 	return null
 }
